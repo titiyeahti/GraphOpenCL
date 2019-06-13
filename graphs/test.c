@@ -29,9 +29,9 @@
 main ( int argc, char *argv[] )
 {
 		int i;
-		M_graph_t mg = mg_random(10, 3, 10);	
+		M_graph_t mg = mg_random(1000, 20, 10);	
 
-		mg_print(mg);
+		printf ( "\n---------------------\n" );
 
 		Graph_t g = g_from_mg(mg);
 
