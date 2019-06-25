@@ -1,14 +1,19 @@
+
+UTILS=../utils
+CCFLAGS=-std=c99
+LIBS= -lOpenCL 
+
 test2.out : test2.c m_graph.o
-	gcc m_graph.o test2.c -o test2.out
+	gcc $^ -o $@
 
 test.out : test.c m_graph.o graph.o
-	gcc graph.o m_graph.o test.c -o test.out
+	gcc $^ -o $@
 
-m_graph.o : m_graph.c m_graph.h
-	gcc -c m_graph.c
+djikstra.out : djikstra.c graph.o m_graph.o
+	gcc $^ $(CFLAGS) $(LIBS) -I $(UTILS) -o $@
 
-graph.o : graph.h graph.c
-	gcc -c graph.c
+%.o : %.c
+	gcc -c $< $(CFLAGS) -I $(UTILS) 
 
 clean :
-	rm *.o test test2
+	rm -rf *.o *.out

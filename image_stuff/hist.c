@@ -52,11 +52,12 @@ int main(int argc, char ** argv)
 {
 		// GENERATION D'IMAGE
 
-		unsigned int i;
+		unsigned long int i;
 		unsigned int img_rows;
-		unsigned int img_cols;
-		unsigned int img_size;
+		unsigned long int img_cols;
+		unsigned long int img_size;
 		unsigned int hist_size;
+		clock_t cl1;
 
 		hist_size = HIST_RANGE * sizeof(int);
 
@@ -65,34 +66,41 @@ int main(int argc, char ** argv)
 		srand(time(NULL));
 
 		if (argc == 2) { 
-				img_rows = strtol(argv[1], NULL, 10);
-				img_cols = strtol(argv[1], NULL, 10);
+				img_rows = strtoul(argv[1], NULL, 10);
+				img_cols = strtoul(argv[1], NULL, 10);
 		}
 		else if (argc == 3)	{
-				img_rows = strtol(argv[1], NULL, 10);
-				img_cols = strtol(argv[2], NULL, 10);
+				img_rows = strtoul(argv[1], NULL, 10);
+				img_cols = strtoul(argv[2], NULL, 10);
 		}
 		else {
-				img_rows = 80000;
-				img_cols = 6000;
+				img_rows = 800;
+				img_cols = 600;
 		}
 
 		img_size = img_rows * img_cols;
 
+		cl1 = clock();
+
 		img = (unsigned char*) malloc(img_size * sizeof(char));
+
+		cl1 = clock() - cl1;
+
+		printf("Malloc image : %9.8f\n", (double) cl1/CLOCKS_PER_SEC);
+
+		cl1 = clock();
+
 
 		for(i = 0; i < img_size; i++)
 		{
-				img[i] = (rand() % HIST_RANGE)/8;
-				img[i] += (rand() % HIST_RANGE)/8;
-				img[i] += (rand() % HIST_RANGE)/8;
-				img[i] += (rand() % HIST_RANGE)/8;
-				img[i] += (rand() % HIST_RANGE)/8;
-				img[i] += (rand() % HIST_RANGE)/8;
-				img[i] += (rand() % HIST_RANGE)/8;
-				img[i] += (rand() % HIST_RANGE)/8;
-		}
-		printf("i : %d\n", i);
+				img[i] = (rand());		}
+		printf("i : %ld\n", i);
+		
+		cl1 = clock() - cl1;
+
+		printf("Remplissage image : %9.8f\n", (double) cl1/CLOCKS_PER_SEC);
+
+		cl1 = clock();
 
 		// PLATFORM 
 	
@@ -115,11 +123,11 @@ int main(int argc, char ** argv)
 
 		for(i = 0; i < num_platforms; i++)
 		{
-				err = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 0, NULL, &num_devices);
+				err = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
 
 				if (num_devices > 0)
 				{
-						err = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 1, &device, NULL);
+						err = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 1, &device, NULL);
 						break;
 				}
 		}
@@ -165,6 +173,8 @@ int main(int argc, char ** argv)
 
 		// MEMORY
 
+		cl1 = clock();
+		
 		cl_mem b_img;
 		b_img = clCreateBuffer(context, CL_MEM_READ_ONLY, img_size, NULL, &err);
 		checkError(err, "Create buffer img");
@@ -176,12 +186,18 @@ int main(int argc, char ** argv)
 		err = clEnqueueWriteBuffer(queue, b_img, CL_TRUE, 0, img_size * sizeof(char), 
 						img, 0, NULL, NULL);
 		checkError(err, "Write img");
+		
+
 
 		int zero = 0;
 
 		err = clEnqueueFillBuffer(queue, b_hist, &zero, sizeof(int), 0, hist_size,
 						0, NULL, NULL);
 		checkError(err, "Fill hist");
+		
+		cl1 = clock() - cl1;
+
+		printf("Buffers création: %9.8f\n", (double) cl1/CLOCKS_PER_SEC);
 
 		// KERNEL
 		
@@ -201,46 +217,10 @@ int main(int argc, char ** argv)
 		size_t local_size;
 		int wg;
 		size_t global_size;
-		int log2;
 
-		int j;
-		int tmp = img_size;
-
-		for(i = 0; i < 1;)
-		{
-				if(tmp == 0)
-						break;
-
-				tmp = tmp >> 1;
-				log2++;
-		}
-
-		for(i = 1; i < (unsigned int)(1 <<((log2/2) + 1)); i++)
-		{
-				if (img_size%i == 0)
-				{
-						global_size = img_size/i;
-						for(j=24; j>0; j--)
-						{
-								if(global_size%j == 0)
-								{
-										local_size = global_size/i;
-										wg = i;
-								}
-						}
-						local_size = MAX_LS + 1;
-						wg = MAX_WG +1;
-						if (local_size <= MAX_LS && wg <= MAX_WG)
-						{
-								break;
-						}
-				}
-		}
-
-
-		global_size = 1024;
-		local_size = 64;
-		wg = 1;
+		global_size = 1024*24;
+		local_size = 256;
+		wg = global_size/local_size;
 		printf("\n------------------------------\n"
 				"Global size : %ld \n"
 				"Local size : %ld \n"
@@ -257,22 +237,27 @@ int main(int argc, char ** argv)
 						(const size_t *)&local_size,
 						0, NULL, NULL);
 
-		cl = clock() - cl;
+		clFinish(queue);
 
 		checkError(err, "execution");
 
+		cl = clock() - cl;
 		// RESULTATS
 		
+
 		int hist[HIST_RANGE];
 
+		cl1 = clock();
 		err = clEnqueueReadBuffer(queue, b_hist, CL_TRUE, 0, hist_size, hist,
 						0, NULL, NULL);
-		clFinish(queue);
 
 		checkError(err, "Load of the result");
+		cl1 = clock() - cl1;
 
-		//unsigned int total = printHist(hist);
-		//printf("total : %d\n", total);
+		printf("buffer -> res : %9.8f\n", (double) cl1/CLOCKS_PER_SEC);
+
+//		unsigned int total = printHist(hist);
+//		printf("total : %d\n", total);
 		printf("TIME : %9.8f\n", (double) cl/CLOCKS_PER_SEC);
 
 		for (i = 0; i<HIST_RANGE; i++)
