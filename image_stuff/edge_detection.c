@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include <CL/cl.h>
 #include "err_code.h"
 
@@ -44,22 +45,109 @@ unsigned char* convert_to_32bits(unsigned char* img, int x, int y)
 		return res;
 }
 
+
+unsigned char* edgeDetection(
+				unsigned char* input_img, 
+				int y, int x, int n)
+{
+		int i, j, k;
+		clock_t c;
+		unsigned char* output_img;
+		float colorv[4];
+		float colorh[4];
+		float temp;
+		
+		colorv[3] = 1;
+		colorh[3] = 1;
+		
+		output_img = malloc(sizeof(char)*x*y*n);
+		printf("table size :%ld\n", (size_t) x*n*y);
+		
+		c = clock();
+		for(i=0; i<x; i++)
+		{
+				for(j=0; j<y; j++)
+				{
+						for(k=0; k<3; k++)
+						{
+								colorh[k] = 0;
+								colorv[k] = 0;
+						}
+
+						for(k=0; k<3; k++)
+						{
+
+								colorv[k] += i+1<x?
+										((float)input_img[(y*(i+1)+j)*n+k]*2/255):0;
+								colorv[k] += (i+1<x)&&(j-1>0)?
+										((float)input_img[(y*(i+1)+j-1)*n+k]/255):0;
+								colorv[k] += (i+1<x)&&(j+1<y)?
+										((float)input_img[(y*(i+1)+j+1)*n+k]/255):0;
+
+								colorv[k] -= i-1>0?
+										((float)input_img[(y*(i-1)+j)*n+k]*2/255):0;
+								colorv[k] -= (i-1>0)&&(j-1>0)?
+										((float)input_img[(y*(i-1)+j-1)*n+k]/255):0;
+								colorv[k] -= (i-1>0)&&(j+1<y)?
+										((float)input_img[(y*(i-1)+j+1)*n+k]/255):0;
+								
+								
+								colorh[k] += j+1<y?
+										((float)input_img[(y*i+j+1)*n+k]*2/255):0;
+								colorh[k] += (j+1<y)&&(i-1>0)?
+										((float)input_img[(y*(i-1)+j+1)*n+k]/255):0;
+								colorh[k] += (j+1<y)&&(i+1<x)?
+										((float)input_img[(y*(i+1)+j+1)*n+k]/255):0;
+
+								colorh[k] -= j-1>0?
+										((float)input_img[(y*i+j-1)*n+k]*2/255):0;
+								colorh[k] -= (j-1>0)&&(i-1>0)?
+										((float)input_img[(y*(i-1)+j-1)*n+k]/255):0;
+								colorh[k] -= (j-1>0)&&(i+1<x)?
+										((float)input_img[(y*(i+1)+j-1)*n+k]/255):0;
+						}
+
+						for(k=0; k<3; k++)
+						{
+								temp = 64*sqrt(colorh[k]*colorh[k] + colorv[k]*colorv[k]);
+								
+								output_img[(y*i+j)*n+k] = (unsigned char)temp;
+						}
+						output_img[3] = input_img[3];
+				}
+		}
+		c = clock() -c;
+
+		printf("SEQ TIME %d %f\n", x*y,((float)c/ CLOCKS_PER_SEC));
+
+		return output_img;
+}
+
 unsigned char* clEdgeDetection(
-				char* filename, 
+				unsigned char* input_img, 
 				cl_context context, 
 				cl_command_queue queue, 
-				cl_kernel kernel)
+				cl_kernel kernel,
+				int x, int y, int n)
 {	
-		// Loading image
-//		temp = stbi_load(filename, &x, &y, &n, 0);
-//		input_img = convert_to_32bits(temp, x, y);
-//		n++;
-//		output_img = malloc(sizeof(char)*x*y*n);
-//		free(temp);
+		// VARS
+		unsigned char* output_img;
+		cl_int err;
+		cl_image_format format;
+		cl_mem input_i;
+		cl_mem output_i;
+		cl_image_desc desc;
+		cl_sampler sampler;
+		size_t origin[3];
+		size_t region[3];
+		unsigned char color[4];
+		size_t worksize[2];
+		clock_t c;
+
+
+		output_img = malloc(sizeof(char)*x*y*n);
 		
-		input_img = stbi_load(filename, &x, &y, &n, 0);
-
-
+		c = clock();
 		// IMAGE PARAMTERS SETUP
 		origin[0] = 0;
 		origin[1] = 0;
@@ -100,7 +188,6 @@ unsigned char* clEdgeDetection(
 
 		// PUSHING IMAGES INTO THE DEVICE
 		// CLOCK
-		c0 = clock();
 		err = clEnqueueWriteImage(queue, input_i, CL_FALSE, 
 						(const size_t*)origin, (const size_t*)region, 0, 0, input_img,
 						0, NULL, NULL);
@@ -126,37 +213,37 @@ unsigned char* clEdgeDetection(
 		worksize[0] = (size_t) x;
 		worksize[1] = (size_t) y;
 
-		printf("SEG FAULT FINDER, line : %d\n", __LINE__);
 		err = clEnqueueNDRangeKernel(queue, kernel, 2, NULL, worksize, NULL,
 						0, NULL, NULL);
 		checkError(err, "Kernels execution");
 
-		printf("SEG FAULT FINDER, line : %d\n", __LINE__);
 		err = clFinish(queue);
 
 		err = clEnqueueReadImage(queue, output_i, CL_FALSE, origin, region, 
 						0, 0, output_img, 0, NULL, NULL);
 
 		err = clFinish(queue);
+		
+		c = clock() -c;
 
+		printf("Parralel TIME %d %f\n", x*y,((float)c/ CLOCKS_PER_SEC));
+
+		clReleaseMemObject(input_i);
+		clReleaseMemObject(output_i);
+		clReleaseSampler(sampler);
 		return output_img;
 }
 
 int main(int argc, char** argv)
 {
 		// VARIABLES
+		cl_int err;
 		char * filename = argc>1 ? argv[1]: "sputnik.jpg";
 		char * kernelsource;
 		int i, x, y, n;
 		unsigned char* temp;
 		unsigned char* input_img;
 		unsigned char* output_img;
-		cl_int err;
-		cl_image_format format;
-		cl_mem input_i;
-		cl_mem output_i;
-		cl_image_desc desc;
-		cl_sampler sampler;
 		cl_device_id device;
 		cl_uint num_devices = 0;
 		cl_platform_id * platforms;
@@ -167,13 +254,16 @@ int main(int argc, char** argv)
 		cl_kernel kernel;
 		FILE* stream;
 		unsigned int filesize;
-		size_t origin[3];
-		size_t region[3];
-		unsigned char color[4];
-		size_t worksize[2];
-		clock_t c0, c1;
 		// END VARIABLES
 
+
+		// Loading image
+		temp = stbi_load(filename, &x, &y, &n, 0);
+		input_img = convert_to_32bits(temp, x, y);
+		n++;
+		free(temp);
+		
+		//input_img = stbi_load(filename, &x, &y, &n, 0);
 
 
 
@@ -236,16 +326,17 @@ int main(int argc, char** argv)
 		// KERNEL
 		kernel = clCreateKernel(program, "sobel", &err);
 
+		// CALCUL 
+		//output_img = clEdgeDetection(input_img, context, queue, kernel, x, y, n);
+		//free(output_img);
+		//output_img = NULL;
+		output_img = edgeDetection(input_img, x, y, n);
 
 		// SAVING THE IMAGE
-		err = stbi_write_png("res.png", x, y, n, output_img, n*x);
+		err = stbi_write_jpg("res.jpg", x, y, n, output_img, 100);
 
-		printf("SEG FAULT FINDER, line : %d\n", __LINE__);
 		free(input_img);
 		free(output_img);
-		clReleaseMemObject(input_i);
-		clReleaseMemObject(output_i);
-		clReleaseSampler(sampler);
 		clReleaseDevice(device);
 		clReleaseCommandQueue(queue);
 		clReleaseContext(context);
