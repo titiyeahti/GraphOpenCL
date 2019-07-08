@@ -9,7 +9,7 @@ test2.out : test2.c m_graph.o
 test.out : test.c m_graph.o graph.o
 	gcc $^ -o $@
 
-djikstra.out : djikstra.c graph.o m_graph.o
+dijkstra.out : dijkstra.c graph.o m_graph.o
 	gcc $^ $(CFLAGS) $(LIBS) -I $(UTILS) -o $@
 
 %.o : %.c

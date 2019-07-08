@@ -2,7 +2,7 @@
 #define MAX_INT TEMP-1
 
 __kernel
-void djikstra1(__global int* vertices,
+void dijkstra1(__global int* vertices,
 				__global int* edges,
 				__global int* weights, 
 				__global int* costs,
@@ -12,8 +12,8 @@ void djikstra1(__global int* vertices,
 	int id = get_global_id(0);
 	int dest;
 	int i;
-	int cost;
 	int n_cost;
+	int cost;
 	int start;
 	int end;
 
@@ -25,20 +25,20 @@ void djikstra1(__global int* vertices,
 		for(i = start; i<end; i++)
 		{
 			dest = edges[i];
-			
-			cost = u_costs[dest];
+
 			n_cost = costs[id] + weights[i];
-			
-			if (n_cost < cost)
-			{
-				u_costs[dest] = n_cost;
-			}
+			cost = u_costs[dest];
+
+			if (costs[id] + weights[i] < u_costs[dest])
+				u_costs[dest] = costs[id]+weights[i];
+
+
 		}
 	}
 };
 
 __kernel
-void djikstra2(__global int* u_costs,
+void dijkstra2(__global int* u_costs,
 				__global int* tovisit,
 				__global int* costs)
 {
@@ -51,6 +51,7 @@ void djikstra2(__global int* u_costs,
 		costs[id] = nc;
 		tovisit[id] = 1;
 	}
+	u_costs[id] = costs[id];
 };
 
 __kernel

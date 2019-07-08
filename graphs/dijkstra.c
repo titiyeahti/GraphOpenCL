@@ -1,9 +1,9 @@
 /*
  * =====================================================================================
  *
- *       Filename:  djikstra.c
+ *       Filename:  dijkstra.c
  *
- *    Description:  Parallelized implementation of djikstra's algorithm
+ *    Description:  Parallelized implementation of dijkstra's algorithm
  *
  *        Version:  1.0
  *        Created:  13/06/2019 11:56:58
@@ -25,6 +25,17 @@
 #include "graph.h"
 #include "err_code.h"
 
+void compare_array(int* a, int* b, int size)
+{
+		int i;
+		for (i=0; i<size; i++)
+		{
+				if(a[i]!=b[i])
+						printf("%d : %d != %d \n", i, a[i], b[i]);
+		}
+
+}
+
 void print_array(int* array, int size)
 {
 		int i;
@@ -37,7 +48,7 @@ void print_array(int* array, int size)
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  is_to_visit
- *  Description:  aux function for run_djikstra, return 1 if some vertices are needed 
+ *  Description:  aux function for run_dijkstra, return 1 if some vertices are needed 
  *  			to be visited in the array
  * =====================================================================================
  */
@@ -48,6 +59,7 @@ int is_to_visit(int* array, size_t size)
 		{
 				if (array[i]==1)
 				{
+						printf("To visit : %d\n", i);
 						return 1;
 				}
 		}
@@ -58,18 +70,18 @@ int is_to_visit(int* array, size_t size)
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  run_djikstra
+ *         Name:  run_dijkstra
  *  Description:  return the weigths of the shortest paths from start_vertices to 
  *  			  every vertex. The return value must be freed.
  * =====================================================================================
  */
 
 int*
-run_djikstra (cl_context context, cl_device_id device, Graph_t g,
+run_dijkstra (cl_context context, cl_device_id device, Graph_t g,
 				int start_vertex)
 {
 		FILE	*stream;								/* input-file pointer */
-		char	*stream_file_name = "djikstraker.c";	/* input-file name    */
+		char	*stream_file_name = "dijkstraker.c";	/* input-file name    */
 		unsigned int filesize;                  		/* size of the .cl file */
 		char * kernelsource;                    		/* string to store the code */
 		int err;                                		/* the error code */
@@ -82,7 +94,7 @@ run_djikstra (cl_context context, cl_device_id device, Graph_t g,
 		// openCL variables
 		cl_command_queue queue;
 		cl_program program;
-		cl_kernel init, djiks1, djiks2;
+		cl_kernel init, dijks1, dijks2;
 		cl_mem b_costs, b_ucosts, b_tovisit, 
 			   b_vertices, b_edges, b_weights;
 
@@ -126,9 +138,9 @@ run_djikstra (cl_context context, cl_device_id device, Graph_t g,
 		checkError(err, "building program");
 
 		// Kernels
-		djiks1 = clCreateKernel(program, "djikstra1", &err);
+		dijks1 = clCreateKernel(program, "dijkstra1", &err);
 		checkError(err, "Kernel DJ1");
-		djiks2 = clCreateKernel(program, "djikstra2", &err);
+		dijks2 = clCreateKernel(program, "dijkstra2", &err);
 		checkError(err, "Kernel DJ2");
 		init = clCreateKernel(program, "init", &err);
 		checkError(err, "Kernel INIT");
@@ -150,7 +162,6 @@ run_djikstra (cl_context context, cl_device_id device, Graph_t g,
 		
 		to_visit = malloc (b_size);
 		if ( u_costs==NULL ) {
-				fprintf ( stderr, "\ndynamic memory allocation failed\n" );
 				exit (EXIT_FAILURE);
 		}
 
@@ -194,7 +205,8 @@ run_djikstra (cl_context context, cl_device_id device, Graph_t g,
 						0, NULL, NULL);
 		checkError(err, "Run init");
 		
-		err = clFinish(queue);
+		err = clEnqueueBarrier(queue);
+		
 		checkError(err, "Finish INIT");
 		
 		err = clEnqueueReadBuffer(queue, b_tovisit, CL_TRUE, 0, b_size, to_visit, 
@@ -203,44 +215,53 @@ run_djikstra (cl_context context, cl_device_id device, Graph_t g,
 
 
 		// main loop
-		// during the loop, w enqueue arg for djikstra1 and wait the end 
+		// during the loop, w enqueue arg for dijkstra1 and wait the end 
 		// then we enqueue arg for dijkstra2 and run it
 		// at the end we actualize to_visit array.
-		err = clFinish(queue);
+		err = clEnqueueBarrier(queue);
+		int counter=0;
 		while (is_to_visit(to_visit, size))
 		{
-				err = clSetKernelArg(djiks1, 0, sizeof(cl_mem), &b_vertices);
-				err |= clSetKernelArg(djiks1, 1, sizeof(cl_mem), &b_edges);
-				err |= clSetKernelArg(djiks1, 2, sizeof(cl_mem), &b_weights);
-				err |= clSetKernelArg(djiks1, 3, sizeof(cl_mem), &b_costs);
-				err |= clSetKernelArg(djiks1, 4, sizeof(cl_mem), &b_ucosts);
-				err |= clSetKernelArg(djiks1, 5, sizeof(cl_mem), &b_tovisit);
+//				print_array(to_visit, size);
+				err = clSetKernelArg(dijks1, 0, sizeof(cl_mem), &b_vertices);
+				err |= clSetKernelArg(dijks1, 1, sizeof(cl_mem), &b_edges);
+				err |= clSetKernelArg(dijks1, 2, sizeof(cl_mem), &b_weights);
+				err |= clSetKernelArg(dijks1, 3, sizeof(cl_mem), &b_costs);
+				err |= clSetKernelArg(dijks1, 4, sizeof(cl_mem), &b_ucosts);
+				err |= clSetKernelArg(dijks1, 5, sizeof(cl_mem), &b_tovisit);
 				checkError(err, "Arguments DJ1");
 
-				err = clEnqueueNDRangeKernel(queue, djiks1, 1, NULL, 
+				err = clEnqueueNDRangeKernel(queue, dijks1, 1, NULL, 
 								(const size_t*)&size, NULL, 
 								0, NULL, NULL);
+				checkError(err, "Run DJ1");
+
+				err = clEnqueueBarrier(queue);
+
+				err = clSetKernelArg(dijks2, 0, sizeof(cl_mem), &b_ucosts);
+				err |= clSetKernelArg(dijks2, 1, sizeof(cl_mem), &b_tovisit);
+				err |= clSetKernelArg(dijks2, 2, sizeof(cl_mem), &b_costs);
+				
+
+				err = clEnqueueNDRangeKernel(queue, dijks2, 1, NULL, 
+								(const size_t*)&size, NULL, 
+								0, NULL, NULL);
+				
 				checkError(err, "Run DJ2");
-
-
-				err = clSetKernelArg(djiks2, 0, sizeof(cl_mem), &b_ucosts);
-				err |= clSetKernelArg(djiks2, 1, sizeof(cl_mem), &b_tovisit);
-				err |= clSetKernelArg(djiks2, 2, sizeof(cl_mem), &b_costs);
 				
-				err = clFinish(queue);
-
-				err = clEnqueueNDRangeKernel(queue, djiks2, 1, NULL, 
-								(const size_t*)&size, NULL, 
-								0, NULL, NULL);
+				err = clEnqueueBarrier(queue);
 				
-				err = clFinish(queue);
-
 				err = clEnqueueReadBuffer(queue, b_tovisit, CL_TRUE, 0, 
 						b_size, to_visit, 0, NULL, NULL);
+				
+				err = clEnqueueBarrier(queue);
 						
-				err = clFinish(queue);
+				counter ++;
 		}
+//		printf("number of loops %d\n", counter);
 
+		err = clEnqueueBarrier(queue);
+		
 		err = clEnqueueReadBuffer(queue, b_costs, CL_TRUE, 0, 
 				b_size, costs, 0, NULL, NULL);
 
@@ -258,19 +279,19 @@ run_djikstra (cl_context context, cl_device_id device, Graph_t g,
 		clReleaseMemObject(b_edges);
 		clReleaseMemObject(b_weights);
 		clReleaseKernel(init);
-		clReleaseKernel(djiks1);
-		clReleaseKernel(djiks2);
+		clReleaseKernel(dijks1);
+		clReleaseKernel(dijks2);
 		clReleaseProgram(program);
 		clReleaseCommandQueue(queue);
 
 		return costs;
-}		/* -----  end of function run_djikstra  ----- */
+}		/* -----  end of function run_dijkstra  ----- */
 
 
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  get_next_vertex
- *  Description:  aux function for seq_djikstra
+ *  Description:  aux function for seq_dijkstra
  * =====================================================================================
  */
 int get_next_vertex(int * visit, int* costs, int size)
@@ -295,13 +316,13 @@ int get_next_vertex(int * visit, int* costs, int size)
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  seq_djikstra
- *  Description:  sequential version of the djikstra algorithm
+ *         Name:  seq_dijkstra
+ *  Description:  sequential version of the dijkstra algorithm
  * =====================================================================================
  */
 		int *
 
-seq_djikstra (Graph_t g, int start_vertex)
+seq_dijkstra (Graph_t g, int start_vertex)
 {
 		int* costs	= malloc ( sizeof(int)*g.size);
 		int* to_visit	= malloc ( sizeof(int)*g.size);
@@ -357,7 +378,7 @@ seq_djikstra (Graph_t g, int start_vertex)
 		to_visit	= NULL;
 
 		return costs;
-}		/* -----  end of function sec_djikstra  ----- */
+}		/* -----  end of function sec_dijkstra  ----- */
 
 
 
@@ -422,16 +443,14 @@ int main(int argc, char** argv)
 		// DATA COLLECTING ZONE
 		
 		unsigned int degre = argc>1?strtoul(argv[1], NULL, 10):10;
-		unsigned char max_power = argc>2?strtoul(argv[2], NULL, 10):20;
+		unsigned char max_power = argc>2?strtoul(argv[2], NULL, 10):7;
 		clock_t t1, t2, t3, t4;
 
 		size_t nb_vertices = 1 << 4;
 
-		M_graph_t mg = mg_random(nb_vertices, degre, 100);
-		Graph_t g = g_from_mg(mg);
+//		M_graph_t mg = mg_random(nb_vertices, degre, 100);
+//		Graph_t g = g_from_mg(mg);
 
-		g_free(g);
-		mg_free(mg);
 
 		for (i=4; i<max_power; i++)
 		{
@@ -442,19 +461,23 @@ int main(int argc, char** argv)
 				t1 = clock();
 				int* seq_costs;
 				if (i <= 16)
-						seq_costs = seq_djikstra(g, 0);
+						seq_costs = seq_dijkstra(g, 0);
 
 				t2 = clock();
-				int * gpu_costs = run_djikstra(context[1], device[1], g, 0);
+				int * gpu_costs = run_dijkstra(context[1], device[1], g, 0);
 	
 				t3 = clock();
-				int * cpu_costs = run_djikstra(context[0], device[0], g, 0);
+				int * cpu_costs = run_dijkstra(context[0], device[0], g, 0);
 
 				t4 = clock();
 				printf("%d %f %f %f\n", i,
 								(double) (t2 - t1)/CLOCKS_PER_SEC,
 								(double) (t3 - t2)/CLOCKS_PER_SEC,
 								(double) (t4 - t3)/CLOCKS_PER_SEC);
+
+				compare_array(cpu_costs, gpu_costs, g.size);
+
+
 
 				
 				if (i<=16)
@@ -470,6 +493,11 @@ int main(int argc, char** argv)
 		}
 
 		
+//		g_print(g);
+//		int * cpu_costs = run_dijkstra(context[0], device[0], g, 0);
+//		
+//		g_free(g);
+//		mg_free(mg);
 		clReleaseContext(context[0]);
 		clReleaseContext(context[1]);
 		free(platforms);
