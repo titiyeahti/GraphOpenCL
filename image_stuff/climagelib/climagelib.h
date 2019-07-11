@@ -43,7 +43,9 @@ typedef struct ocl_env ocl_env_t;
  */
 typedef unsigned char * img_t;
 
+// Utils functions
 
+img_t convert_to_32bits(img_t img, size_t x, size_t y);
 
 // OPENCL 
 
