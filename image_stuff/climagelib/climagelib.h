@@ -68,35 +68,35 @@ int oclRelease (ocl_env_t* env);
 
 
 // 3x3 FAST FILTERING FUNCTIONS
-
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  blur3x3
- *  Description:  Return a blurred verion of the input image where width and height 
- *  							are the image dimensions.
+ *         Name:  oclRelease
+ *  Description:  Frees the ocl_env, return EXIT_SUCCES on success.
  * =====================================================================================
  */
 img_t blur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
 
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  gaussian3x3
- *  Description:  
- * =====================================================================================
- */
 img_t gaussian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
 
+img_t median3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
+
+img_t sobel3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
+
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  median3x3
- *  Description:  Return 
+ *         Name:  red, green, blue, grey
+ *  Description:  extract one component of an image, or for the grey function , return 
+ *  							the greyscale image correcponding to the input;
  * =====================================================================================
  */
-img_t median3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t red(ocl_env_t* env, img_t input, size_t width, size_t height);
 
+img_t green(ocl_env_t* env, img_t input, size_t width, size_t height);
 
+img_t blue(ocl_env_t* env, img_t input, size_t width, size_t height);
+
+img_t grey(ocl_env_t* env, img_t input, size_t width, size_t height);
 
 // CUSTOMIZABLE FILTERING FUNCTIONS 
 

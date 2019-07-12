@@ -256,7 +256,7 @@ int oclRelease(ocl_env_t* env)
  * ==================================== IMAGE FUNCTIONS =================================
  * ======================================================================================*/
 
-img_t template3x3(ocl_env_t* env, img_t input, size_t width, size_t height,
+img_t oneImgNoParam(ocl_env_t* env, img_t input, size_t width, size_t height,
 								const char* kername)
 {
 				img_t output;
@@ -303,7 +303,6 @@ img_t template3x3(ocl_env_t* env, img_t input, size_t width, size_t height,
 				desc.buffer = NULL;
 
 				// CREATING IMAGE OBJECTS
-				// TODO chekc the second parameter. seems OK. double check at some point.
 				input_i = clCreateImage(env->context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
 												&format, &desc, input, &env->err);
 
@@ -356,21 +355,63 @@ img_t template3x3(ocl_env_t* env, img_t input, size_t width, size_t height,
 				return output;
 }
 
+// filtering
+
 img_t blur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
 {
-				return template3x3(env, input, width, height, "blur33"); 
+				return oneImgNoParam(env, input, width, height, "blur33"); 
 }
 
 img_t gaussian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
 {
-				return template3x3(env, input, width, height, "gaussian33"); 
+				return oneImgNoParam(env, input, width, height, "gaussian33"); 
 }
 
 img_t median3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
 {
-				return template3x3(env, input, width, height, "median33"); 
+				return oneImgNoParam(env, input, width, height, "median33"); 
 }
 
+img_t sobel3x3(ocl_env_t* env, img_t input, size_t width, size_t height)
+{
+				return oneImgNoParam(env, input, width, height, "sobel"); 
+}
+// math & logical opérations
+
+img_t twoImgNoParam(ocl_env_t* env, img_t input1, img_t input2, 
+								size_t width, size_t height)
+{
+				img_t output;
+				// TODO
+				return output;
+}
+
+// component extration
+
+img_t red(ocl_env_t* env, img_t input, size_t width, size_t height)
+{
+				return oneImgNoParam(env, input, width, height, "red"); 
+}
+
+img_t green(ocl_env_t* env, img_t input, size_t width, size_t height)
+{
+				return oneImgNoParam(env, input, width, height, "green"); 
+}
+
+img_t blue(ocl_env_t* env, img_t input, size_t width, size_t height)
+{
+				return oneImgNoParam(env, input, width, height, "blue"); 
+}
+
+img_t grey(ocl_env_t* env, img_t input, size_t width, size_t height)
+{
+				return oneImgNoParam(env, input, width, height, "grey"); 
+}
+
+// edge detection
+
+
+// TODO, maybe
 img_t custom_filter(ocl_env_t* env, img_t input, size_t width, size_t height,
 								float* filter, size_t filter_range)
 {
