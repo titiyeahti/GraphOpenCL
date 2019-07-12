@@ -98,6 +98,30 @@ img_t blue(ocl_env_t* env, img_t input, size_t width, size_t height);
 
 img_t grey(ocl_env_t* env, img_t input, size_t width, size_t height);
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  add, sub, and, or, xor
+ *  Description:  pixel by pixel mathematical operations;
+ * =====================================================================================
+ */
+
+img_t add(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height);
+
+img_t sub(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height);
+
+img_t and(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height);
+
+img_t or(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height);
+
+img_t xor(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height);
+
+
 // CUSTOMIZABLE FILTERING FUNCTIONS 
 
 /* 

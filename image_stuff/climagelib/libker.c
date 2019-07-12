@@ -227,3 +227,78 @@ void sobel(__read_only image2d_t src,
 				temp.w = 1;
 				write_imagef(dest, (int2) (id0, id1), temp);
 }
+
+__kernel
+void add(__read_only image2d_t src1,
+								__read_only image2d_t src2,
+								__write_only image2d_t dest,
+								sampler_t sampler)
+{
+				int id0 = get_global_id(0);
+				int id1 = get_global_id(1);
+
+				int4 temp = read_imagei(src1, sampler, (int2)(id0, id1));
+				temp += read_imagei(src2, sampler, (int2)(id0, id1));
+				temp.w = 1;
+				write_imagei(dest, (int2) (id0, id1), temp);
+}
+
+__kernel
+void sub(__read_only image2d_t src1,
+								__read_only image2d_t src2,
+								__write_only image2d_t dest,
+								sampler_t sampler)
+{
+				int id0 = get_global_id(0);
+				int id1 = get_global_id(1);
+
+				int4 temp = read_imagei(src1, sampler, (int2)(id0, id1));
+				temp -= read_imagei(src2, sampler, (int2)(id0, id1));
+				temp.w = 1;
+				write_imagei(dest, (int2) (id0, id1), temp);
+}
+
+__kernel
+void and(__read_only image2d_t src1,
+								__read_only image2d_t src2,
+								__write_only image2d_t dest,
+								sampler_t sampler)
+{
+				int id0 = get_global_id(0);
+				int id1 = get_global_id(1);
+
+				int4 temp = read_imagei(src1, sampler, (int2)(id0, id1));
+				temp &= read_imagei(src2, sampler, (int2)(id0, id1));
+				temp.w = 1;
+				write_imagei(dest, (int2) (id0, id1), temp);
+}
+
+__kernel
+void or(__read_only image2d_t src1,
+								__read_only image2d_t src2,
+								__write_only image2d_t dest,
+								sampler_t sampler)
+{
+				int id0 = get_global_id(0);
+				int id1 = get_global_id(1);
+
+				int4 temp = read_imagei(src1, sampler, (int2)(id0, id1));
+				temp |= read_imagei(src2, sampler, (int2)(id0, id1));
+				temp.w = 1;
+				write_imagei(dest, (int2) (id0, id1), temp);
+}
+
+__kernel
+void xor(__read_only image2d_t src1,
+								__read_only image2d_t src2,
+								__write_only image2d_t dest,
+								sampler_t sampler)
+{
+				int id0 = get_global_id(0);
+				int id1 = get_global_id(1);
+
+				int4 temp = read_imagei(src1, sampler, (int2)(id0, id1));
+				temp ^= read_imagei(src2, sampler, (int2)(id0, id1));
+				temp.w = 1;
+				write_imagei(dest, (int2) (id0, id1), temp);
+}

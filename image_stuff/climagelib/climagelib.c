@@ -256,6 +256,8 @@ int oclRelease(ocl_env_t* env)
  * ==================================== IMAGE FUNCTIONS =================================
  * ======================================================================================*/
 
+
+// templates
 img_t oneImgNoParam(ocl_env_t* env, img_t input, size_t width, size_t height,
 								const char* kername)
 {
@@ -355,6 +357,113 @@ img_t oneImgNoParam(ocl_env_t* env, img_t input, size_t width, size_t height,
 				return output;
 }
 
+img_t twoImgNoParam(ocl_env_t* env, img_t input1, img_t input2, 
+								size_t width, size_t height, char* kername)
+{
+				img_t output;
+				cl_image_format format;
+				cl_mem input1_i;
+				cl_mem input2_i;
+				cl_mem output_i;
+				cl_image_desc desc;
+				cl_sampler sampler;
+				size_t origin[3];
+				size_t region[3];
+				unsigned char color[4];
+				size_t worksize[2];
+
+				cl_kernel kernel;
+
+				output = malloc(sizeof(char)*width*height*4);
+
+				// IMAGE PARAMTERS SETUP
+				origin[0] = 0;
+				origin[1] = 0;
+				origin[2] = 0;
+				region[0] = width;
+				region[1] = height;
+				region[2] = 1;
+				color[0] = 0;
+				color[1] = 0;
+				color[2] = 0;
+				color[3] = 1;
+
+				// FORMAT
+				format.image_channel_order = CL_RGBA;
+				format.image_channel_data_type = CL_UNSIGNED_INT8;
+
+				// Filling th cl_image_desc struct 
+				desc.image_type = CL_MEM_OBJECT_IMAGE2D;
+				desc.image_width = width;
+				desc.image_height = height;
+				desc.image_depth = 0;
+				desc.image_array_size = 1;
+				desc.image_row_pitch = 0;
+				desc.image_slice_pitch = 0;
+				desc.num_mip_levels = 0;
+				desc.num_samples = 0;
+				desc.buffer = NULL;
+
+				// CREATING IMAGE OBJECTS
+				input1_i = clCreateImage(env->context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+												&format, &desc, input1, &env->err);
+
+				input2_i = clCreateImage(env->context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+												&format, &desc, input2, &env->err);
+
+				output_i = clCreateImage(env->context, CL_MEM_WRITE_ONLY, 
+												&format, &desc, NULL, &env->err);
+
+				// PUSHING IMAGES INTO THE DEVICE
+				env->err = clEnqueueWriteImage(env->queue, input1_i, CL_FALSE, 
+												(const size_t*)origin, (const size_t*)region, 0, 0, input1,
+												0, NULL, NULL);
+
+				env->err = clEnqueueWriteImage(env->queue, input2_i, CL_FALSE, 
+												(const size_t*)origin, (const size_t*)region, 0, 0, input2,
+												0, NULL, NULL);
+				//		env->err = clEnqueueFillImage(env->queue, output_i, color,
+				//						origin, region, 0, NULL, NULL); 
+
+				// SAMPLER CREATION
+				sampler = clCreateSampler(env->context, CL_FALSE, CL_ADDRESS_CLAMP_TO_EDGE,
+												CL_FILTER_NEAREST, &env->err);
+
+				// KERNEL CREATION
+				kernel = clCreateKernel(env->program, kername, &env->err);
+				checkError(env->err, "kernel creation");
+
+				clFinish(env->queue);
+
+				// KERNEL ARGS
+				env->err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input1_i);
+				env->err = clSetKernelArg(kernel, 1, sizeof(cl_mem), &input2_i);
+				env->err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_i);
+				env->err |= clSetKernelArg(kernel, 3, sizeof(cl_sampler), &sampler);
+
+				// 
+				worksize[0] = width;
+				worksize[1] = height;
+
+				env->err = clEnqueueNDRangeKernel(env->queue, kernel, 2, NULL, worksize, NULL,
+												0, NULL, NULL);
+				checkError(env->err, "kernel ndranged");
+
+				env->err = clFinish(env->queue);
+
+				env->err = clEnqueueReadImage(env->queue, output_i, CL_FALSE, origin, region, 
+												0, 0, output, 0, NULL, NULL);
+
+				env->err = clFinish(env->queue);
+
+				clReleaseKernel(kernel);
+				clReleaseMemObject(input1_i);
+				clReleaseMemObject(input2_i);
+				clReleaseMemObject(output_i);
+				clReleaseSampler(sampler);
+
+				return output;
+}
 // filtering
 
 img_t blur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
@@ -376,15 +485,7 @@ img_t sobel3x3(ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "sobel"); 
 }
-// math & logical opérations
 
-img_t twoImgNoParam(ocl_env_t* env, img_t input1, img_t input2, 
-								size_t width, size_t height)
-{
-				img_t output;
-				// TODO
-				return output;
-}
 
 // component extration
 
@@ -408,8 +509,36 @@ img_t grey(ocl_env_t* env, img_t input, size_t width, size_t height)
 				return oneImgNoParam(env, input, width, height, "grey"); 
 }
 
-// edge detection
+// math & logical operations
+img_t add(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height)
+{
+				return twoImgNoParam(env, input1, input2, width, height, "add");
+}
 
+img_t sub(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height)
+{
+				return twoImgNoParam(env, input1, input2, width, height, "sub");
+}
+
+img_t and(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height)
+{
+				return twoImgNoParam(env, input1, input2, width, height, "and");
+}
+
+img_t or(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height)
+{
+				return twoImgNoParam(env, input1, input2, width, height, "or");
+}
+
+img_t xor(ocl_env_t* env, img_t input1, img_t input2,
+								size_t width, size_t height)
+{
+				return twoImgNoParam(env, input1, input2, width, height, "xor");
+}
 
 // TODO, maybe
 img_t custom_filter(ocl_env_t* env, img_t input, size_t width, size_t height,
