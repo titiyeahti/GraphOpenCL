@@ -302,3 +302,41 @@ void xor(__read_only image2d_t src1,
 				temp.w = 1;
 				write_imagei(dest, (int2) (id0, id1), temp);
 }
+
+__kernel
+void scale(__read_only image2d_t src,
+								__write_only image2d_t dest,
+								sampler_t sampler)
+{
+				int2 id;
+				id.x = get_global_id(0);
+				id.y = get_global_id(1);
+
+
+				int2 size;
+				size.x = get_global_size(0);
+				size.y = get_global_size(1);
+				
+				if (id.x==id.y && id.x == 0)
+								printf("size : %2d \n", size);
+
+				float2 coord;
+				coord.x = (float) id.x/size.x;
+				coord.y = (float) id.y/size.y;
+
+				write_imagef(dest, id, read_imagef(src, sampler, coord)); 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

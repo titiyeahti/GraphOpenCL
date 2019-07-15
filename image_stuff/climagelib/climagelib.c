@@ -540,6 +540,132 @@ img_t xor(ocl_env_t* env, img_t input1, img_t input2,
 				return twoImgNoParam(env, input1, input2, width, height, "xor");
 }
 
+
+// RESIZE 
+
+img_t scale(ocl_env_t* env, img_t input, size_t width, 
+								size_t height, float xcoeff, float ycoeff)
+{
+				img_t output;
+				cl_image_format format;
+				cl_mem input_i;
+				cl_mem output_i;
+				cl_image_desc desc;
+				cl_image_desc dest_desc;
+				cl_sampler sampler;
+				size_t dest_width, dest_height;
+				size_t origin[3];
+				size_t region[3];
+				size_t dest_region[3];
+				unsigned char color[4];
+				size_t worksize[2];
+
+				dest_width = (size_t) (xcoeff * width);
+				dest_height = (size_t) (ycoeff * height);
+
+				printf("xdest = %ld, ydest = %ld\n", dest_width, dest_height);
+
+				cl_kernel kernel;
+
+				output = malloc(sizeof(char)*dest_width*dest_height*4);
+
+				// IMAGE PARAMTERS SETUP
+				origin[0] = 0;
+				origin[1] = 0;
+				origin[2] = 0;
+				
+				region[0] = width;
+				region[1] = height;
+				region[2] = 1;
+				
+				dest_region[0] = dest_width;
+				dest_region[1] = dest_height;
+				dest_region[2] = 1;
+				
+				color[0] = 0;
+				color[1] = 0;
+				color[2] = 0;
+				color[3] = 1;
+
+				// FORMAT
+				format.image_channel_order = CL_RGBA;
+				format.image_channel_data_type = CL_UNORM_INT8;
+
+				// Filling th cl_image_desc struct 
+				desc.image_type = CL_MEM_OBJECT_IMAGE2D;
+				desc.image_width = width;
+				desc.image_height = height;
+				desc.image_depth = 0;
+				desc.image_array_size = 1;
+				desc.image_row_pitch = 0;
+				desc.image_slice_pitch = 0;
+				desc.num_mip_levels = 0;
+				desc.num_samples = 0;
+				desc.buffer = NULL;
+
+				dest_desc.image_type = CL_MEM_OBJECT_IMAGE2D;
+				dest_desc.image_width = dest_width;
+				dest_desc.image_height = dest_height;
+				dest_desc.image_depth = 0;
+				dest_desc.image_array_size = 1;
+				dest_desc.image_row_pitch = 0;
+				dest_desc.image_slice_pitch = 0;
+				dest_desc.num_mip_levels = 0;
+				dest_desc.num_samples = 0;
+				dest_desc.buffer = NULL;
+
+				// CREATING IMAGE OBJECTS
+				input_i = clCreateImage(env->context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+												&format, &desc, input, &env->err);
+
+				output_i = clCreateImage(env->context, CL_MEM_WRITE_ONLY, 
+												&format, &dest_desc, NULL, &env->err);
+
+				// PUSHING IMAGES INTO THE DEVICE
+				env->err = clEnqueueWriteImage(env->queue, input_i, CL_FALSE, 
+												(const size_t*)origin, (const size_t*)region, 0, 0, input,
+												0, NULL, NULL);
+
+				//		env->err = clEnqueueFillImage(env->queue, output_i, color,
+				//						origin, region, 0, NULL, NULL); 
+
+				// SAMPLER CREATION
+				sampler = clCreateSampler(env->context, CL_TRUE, CL_ADDRESS_CLAMP_TO_EDGE,
+												CL_FILTER_NEAREST, &env->err);
+
+				// KERNEL CREATION
+				kernel = clCreateKernel(env->program, "scale", &env->err);
+				checkError(env->err, "kernel creation");
+
+				clFinish(env->queue);
+
+				// KERNEL ARGS
+				env->err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_i);
+				env->err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_i);
+				env->err |= clSetKernelArg(kernel, 2, sizeof(cl_sampler), &sampler);
+
+				// 
+				worksize[0] = dest_width;
+				worksize[1] = dest_height;
+
+				env->err = clEnqueueNDRangeKernel(env->queue, kernel, 2, NULL, worksize, NULL,
+												0, NULL, NULL);
+				checkError(env->err, "kernel ndranged");
+
+				env->err = clFinish(env->queue);
+
+				env->err = clEnqueueReadImage(env->queue, output_i, CL_FALSE, origin, dest_region, 
+												0, 0, output, 0, NULL, NULL);
+
+				env->err = clFinish(env->queue);
+
+				clReleaseKernel(kernel);
+				clReleaseMemObject(input_i);
+				clReleaseMemObject(output_i);
+				clReleaseSampler(sampler);
+
+				return output;
+}
 // TODO, maybe
 img_t custom_filter(ocl_env_t* env, img_t input, size_t width, size_t height,
 								float* filter, size_t filter_range)

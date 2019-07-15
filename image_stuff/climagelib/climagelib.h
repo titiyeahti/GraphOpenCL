@@ -112,7 +112,7 @@ img_t add(ocl_env_t* env, img_t input1, img_t input2,
 img_t sub(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height);
 
-img_t and(ocl_env_t* env, img_t input1, img_t input2,
+img_t and(ocl_env_t* env, img_t input1, img_t input2, 
 								size_t width, size_t height);
 
 img_t or(ocl_env_t* env, img_t input1, img_t input2,
@@ -120,6 +120,17 @@ img_t or(ocl_env_t* env, img_t input1, img_t input2,
 
 img_t xor(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height);
+
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  scale
+ *  Description:  return the image with the new dims : xcoeff*width, ycoeff*height.
+ * =====================================================================================
+ */
+img_t scale(ocl_env_t* env, img_t input, size_t width, 
+								size_t height, float xcoeff, float ycoeff);
+
 
 
 // CUSTOMIZABLE FILTERING FUNCTIONS 
