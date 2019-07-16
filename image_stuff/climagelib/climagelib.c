@@ -666,6 +666,123 @@ img_t scale(ocl_env_t* env, img_t input, size_t width,
 
 				return output;
 }
+
+float* histogram(ocl_env_t* env, img_t input, size_t width, size_t height)
+{
+				const char * kername = "hist";
+				cl_image_format format;
+				cl_mem input_i;
+				cl_mem hist_i;
+				cl_mem hist_o;
+				cl_image_desc desc;
+				cl_sampler sampler;
+				size_t hist_size = sizeof(float)*4096;
+				float* hist = malloc(hist_size);
+				size_t origin[3];
+				size_t region[3];
+				size_t worksize[2];
+
+				cl_kernel kernel;
+				cl_kernel convert;
+
+				// IMAGE PARAMTERS SETUP
+				origin[0] = 0;
+				origin[1] = 0;
+				origin[2] = 0;
+				region[0] = width;
+				region[1] = height;
+				region[2] = 1;
+
+				// FORMAT
+				format.image_channel_order = CL_RGBA;
+				format.image_channel_data_type = CL_UNSIGNED_INT8;
+
+				// Filling th cl_image_desc struct 
+				desc.image_type = CL_MEM_OBJECT_IMAGE2D;
+				desc.image_width = width;
+				desc.image_height = height;
+				desc.image_depth = 0;
+				desc.image_array_size = 1;
+				desc.image_row_pitch = 0;
+				desc.image_slice_pitch = 0;
+				desc.num_mip_levels = 0;
+				desc.num_samples = 0;
+				desc.buffer = NULL;
+
+				// CREATING IMAGE OBJECTS
+				input_i = clCreateImage(env->context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+												&format, &desc, input, &env->err);
+
+				hist_i = clCreateBuffer(env->context, CL_MEM_READ_WRITE, hist_size,
+												NULL, &env->err);
+				
+				hist_o = clCreateBuffer(env->context, CL_MEM_WRITE_ONLY, hist_size,
+												NULL, &env->err);
+
+				// PUSHING IMAGE INTO THE DEVICE
+				env->err = clEnqueueWriteImage(env->queue, input_i, CL_FALSE, 
+												(const size_t*)origin, (const size_t*)region, 0, 0, input,
+												0, NULL, NULL);
+
+				int zero = 0;
+				env->err = clEnqueueFillBuffer(env->queue, hist_i, &zero, 
+												sizeof(int), 0, hist_size, 0, NULL, NULL);
+
+
+				// SAMPLER CREATION
+				sampler = clCreateSampler(env->context, CL_FALSE, CL_ADDRESS_CLAMP_TO_EDGE,
+												CL_FILTER_NEAREST, &env->err);
+
+				// KERNEL CREATION
+				kernel = clCreateKernel(env->program, kername, &env->err);
+				checkError(env->err, "kernel creation");
+
+				convert = clCreateKernel(env->program, "convert", &env->err);
+				checkError(env->err, "kernel creation");
+
+				clFinish(env->queue);
+
+				// KERNEL ARGS
+				env->err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_i);
+				env->err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &hist_i);
+				env->err |= clSetKernelArg(kernel, 2, sizeof(cl_sampler), &sampler);
+
+				worksize[0] = width;
+				worksize[1] = height;
+
+				env->err = clEnqueueNDRangeKernel(env->queue, kernel, 2, NULL, worksize, NULL,
+												0, NULL, NULL);
+				checkError(env->err, "kernel ndranged");
+
+				env->err = clFinish(env->queue);
+
+
+				size_t img_size = width*height;
+
+				env->err = clSetKernelArg(convert, 0, sizeof(cl_mem), &hist_i);
+				env->err |= clSetKernelArg(convert, 1, sizeof(cl_mem), &hist_o);
+				env->err |= clSetKernelArg(convert, 2, sizeof(size_t), &img_size);
+
+				size_t size_for_kernel = 4096;
+				env->err = clEnqueueNDRangeKernel(env->queue, convert, 1, NULL, 
+												&size_for_kernel, NULL, 0, NULL, NULL);
+
+				env->err = clFinish(env->queue);
+				
+				env->err = clEnqueueReadBuffer(env->queue, hist_o, CL_FALSE, 0, 
+												hist_size, hist, 0, NULL, NULL);
+
+				env->err = clFinish(env->queue);
+
+				clReleaseKernel(kernel);
+				clReleaseMemObject(input_i);
+				clReleaseMemObject(hist_i);
+				clReleaseMemObject(hist_o);
+				clReleaseSampler(sampler);
+
+				return hist;
+}
+
 // TODO, maybe
 img_t custom_filter(ocl_env_t* env, img_t input, size_t width, size_t height,
 								float* filter, size_t filter_range)

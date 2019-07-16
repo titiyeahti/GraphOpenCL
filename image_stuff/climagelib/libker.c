@@ -16,6 +16,8 @@
  * =====================================================================================
  */
 
+#define	CONST_SIZE 3
+#define	CONST_SIZE2 CONST_SIZE*CONST_SIZE
 
 				__kernel
 void blur33(__read_only image2d_t src,
@@ -33,9 +35,9 @@ void blur33(__read_only image2d_t src,
 				temp.z = 0;
 				temp.w = 0;
 
-				for(i = id0-1; i < id0 + 2; i++)
+				for(i = -(CONST_SIZE-2); i < (CONST_SIZE-1); i++)
 				{
-								for(j = id1-1; j < id1 + 2; j++)
+								for(j = -(CONST_SIZE-2); j < (CONST_SIZE-1); j++)
 								{
 												temp += read_imagef(src, sampler, (int2)(i, j));
 								}
@@ -64,9 +66,9 @@ void gaussian33(__read_only image2d_t src,
 				temp.z = 0;
 				temp.w = 0;
 
-				for(i = -1; i < 2; i++)
+				for(i = -(CONST_SIZE-2); i < (CONST_SIZE-1); i++)
 				{
-								for(j = -1; j < 2; j++)
+								for(j = -(CONST_SIZE-2); j < (CONST_SIZE-1); j++)
 								{
 												val = exp2(-(float)(i*i+j*j)/2);
 												sum += val;
@@ -90,20 +92,20 @@ void median33(__read_only image2d_t src,
 
 				k = 0;
 				float4 temp;
-				float4 array[25];
+				float4 array[9];
 
-				for(i = id0-2; i < id0 + 3; i++)
+				for(i = -(CONST_SIZE-2); i < (CONST_SIZE-1); i++)
 				{
-								for(j = id1-2; j < id1 + 3; j++)
+								for(j = -(CONST_SIZE-2); j < (CONST_SIZE-1); j++)
 								{
 												array[k] = read_imagef(src, sampler, (int2)(i, j));
 												k++;
 								}
 				}
 
-				for (i=1; i<25; i++)
+				for (i=1; i<CONST_SIZE2; i++)
 				{
-								for (j=0; j<25-i; j++)
+								for (j=0; j<CONST_SIZE2-i; j++)
 								{
 												if ((array[j].x > array[j+1].x)
 																				|| (fabs(array[j].x - array[j+1].x) <= 0.01  && 
@@ -317,9 +319,6 @@ void scale(__read_only image2d_t src,
 				size.x = get_global_size(0);
 				size.y = get_global_size(1);
 				
-				if (id.x==id.y && id.x == 0)
-								printf("size : %2d \n", size);
-
 				float2 coord;
 				coord.x = (float) id.x/size.x;
 				coord.y = (float) id.y/size.y;
@@ -327,16 +326,39 @@ void scale(__read_only image2d_t src,
 				write_imagef(dest, id, read_imagef(src, sampler, coord)); 
 }
 
+__kernel
+void hist(__read_only image2d_t src,
+								__global int* histo,
+								sampler_t sampler)
+{
+				int size = get_global_size(1);
+				int id0 = get_global_id(0);
+				int id1 = get_global_id(1);
+				int i, j, k;
+
+				int4 color;
+				color = read_imagei(src, sampler, (int2)(id0, id1));
 
 
+				i = color.x / 16;
+				j = color.y / 16;
+				k = color.z / 16;
+				
+//				if (id0 == id1)
+//				{
+//								printf("color : %4d\n(i, j, k) : %3d\n\n", color,
+//															(int3)(i, j, k));
+//				}
+//				
+				atomic_add(&histo[256*i+16*j+k],1);
+}
 
+__kernel
+void convert(__global int* input,
+								__global float* output,
+								unsigned long int size)
+{
+				int id = get_global_id(0);
 
-
-
-
-
-
-
-
-
-
+				output[id] = (float)input[id]/(float)size; 
+}

@@ -133,6 +133,21 @@ img_t scale(ocl_env_t* env, img_t input, size_t width,
 
 
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  histogram
+ *  Description:  return the histogram of the input image.
+ *  							the format is the following :
+ *  							hist[256*i + 16*j + k] contain the frequency of the pixels in the
+ *  							following set (S(i, j, k) = {r, g, b \in [0, 255]^3,
+ *  									16*i <= r < 16(i+1) 
+ *  									16*j <= g < 16(j+1) 
+ *  									16*k <= b < 16(k+1)} 
+ * =====================================================================================
+ */
+float* histogram(ocl_env_t* env, img_t input, size_t width, 
+								size_t height);
+
 // CUSTOMIZABLE FILTERING FUNCTIONS 
 
 /* 

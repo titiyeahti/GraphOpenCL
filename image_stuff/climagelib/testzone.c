@@ -155,6 +155,17 @@ int main(int argc, char** arvg)
 				c = clock() - c;
 				printf("scale : %f\n", (double) c/CLOCKS_PER_SEC);
 				stbi_write_jpg("img/scale.jpg", (int)(x/2), (int)(y*1.5), n, output, 100);
+
+				float* hist = histogram(&env, input, (size_t)x, (size_t)y);
+
+				int i;
+				float sum=0;
+				for(i=0; i<4096; i++)
+				{
+//								printf("%f\n", hist[i]);
+								sum += hist[i];
+				}
+				printf("somme hist = %f\n", sum);
 				
 				free(output);
 
