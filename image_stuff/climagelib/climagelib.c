@@ -466,22 +466,22 @@ img_t twoImgNoParam(ocl_env_t* env, img_t input1, img_t input2,
 }
 // filtering
 
-img_t blur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclBlur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "blur33"); 
 }
 
-img_t gaussian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclGaussian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "gaussian33"); 
 }
 
-img_t median3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclMedian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "median33"); 
 }
 
-img_t sobel3x3(ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclSobel3x3(ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "sobel"); 
 }
@@ -489,52 +489,52 @@ img_t sobel3x3(ocl_env_t* env, img_t input, size_t width, size_t height)
 
 // component extration
 
-img_t red(ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclRed(ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "red"); 
 }
 
-img_t green(ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclGreen(ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "green"); 
 }
 
-img_t blue(ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclBlue(ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "blue"); 
 }
 
-img_t grey(ocl_env_t* env, img_t input, size_t width, size_t height)
+img_t oclGrey(ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				return oneImgNoParam(env, input, width, height, "grey"); 
 }
 
 // math & logical operations
-img_t add(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclAdd(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height)
 {
 				return twoImgNoParam(env, input1, input2, width, height, "add");
 }
 
-img_t sub(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclSub(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height)
 {
 				return twoImgNoParam(env, input1, input2, width, height, "sub");
 }
 
-img_t and(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclAnd(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height)
 {
 				return twoImgNoParam(env, input1, input2, width, height, "and");
 }
 
-img_t or(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclOr(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height)
 {
 				return twoImgNoParam(env, input1, input2, width, height, "or");
 }
 
-img_t xor(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclXor(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height)
 {
 				return twoImgNoParam(env, input1, input2, width, height, "xor");
@@ -543,7 +543,7 @@ img_t xor(ocl_env_t* env, img_t input1, img_t input2,
 
 // RESIZE 
 
-img_t scale(ocl_env_t* env, img_t input, size_t width, 
+img_t oclScale(ocl_env_t* env, img_t input, size_t width, 
 								size_t height, float xcoeff, float ycoeff)
 {
 				img_t output;
@@ -667,7 +667,7 @@ img_t scale(ocl_env_t* env, img_t input, size_t width,
 				return output;
 }
 
-float* histogram(ocl_env_t* env, img_t input, size_t width, size_t height)
+float* oclHistogram(ocl_env_t* env, img_t input, size_t width, size_t height)
 {
 				const char * kername = "hist";
 				cl_image_format format;
@@ -781,13 +781,4 @@ float* histogram(ocl_env_t* env, img_t input, size_t width, size_t height)
 				clReleaseSampler(sampler);
 
 				return hist;
-}
-
-// TODO, maybe
-img_t custom_filter(ocl_env_t* env, img_t input, size_t width, size_t height,
-								float* filter, size_t filter_range)
-{
-				//TODO
-				img_t output;
-				return output;
 }

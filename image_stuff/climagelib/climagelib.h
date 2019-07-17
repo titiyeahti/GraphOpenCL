@@ -74,13 +74,13 @@ int oclRelease (ocl_env_t* env);
  *  Description:  Frees the ocl_env, return EXIT_SUCCES on success.
  * =====================================================================================
  */
-img_t blur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclBlur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
 
-img_t gaussian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclGaussian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
 
-img_t median3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclMedian3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
 
-img_t sobel3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclSobel3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
 
 
 /* 
@@ -90,13 +90,13 @@ img_t sobel3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
  *  							the greyscale image correcponding to the input;
  * =====================================================================================
  */
-img_t red(ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclRed(ocl_env_t* env, img_t input, size_t width, size_t height);
 
-img_t green(ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclGreen(ocl_env_t* env, img_t input, size_t width, size_t height);
 
-img_t blue(ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclBlue(ocl_env_t* env, img_t input, size_t width, size_t height);
 
-img_t grey(ocl_env_t* env, img_t input, size_t width, size_t height);
+img_t oclGrey(ocl_env_t* env, img_t input, size_t width, size_t height);
 
 
 /* 
@@ -106,19 +106,19 @@ img_t grey(ocl_env_t* env, img_t input, size_t width, size_t height);
  * =====================================================================================
  */
 
-img_t add(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclAdd(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height);
 
-img_t sub(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclSub(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height);
 
-img_t and(ocl_env_t* env, img_t input1, img_t input2, 
+img_t oclAnd(ocl_env_t* env, img_t input1, img_t input2, 
 								size_t width, size_t height);
 
-img_t or(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclOr(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height);
 
-img_t xor(ocl_env_t* env, img_t input1, img_t input2,
+img_t oclXor(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height);
 
 
@@ -128,7 +128,7 @@ img_t xor(ocl_env_t* env, img_t input1, img_t input2,
  *  Description:  return the image with the new dims : xcoeff*width, ycoeff*height.
  * =====================================================================================
  */
-img_t scale(ocl_env_t* env, img_t input, size_t width, 
+img_t oclScale(ocl_env_t* env, img_t input, size_t width, 
 								size_t height, float xcoeff, float ycoeff);
 
 
@@ -145,19 +145,5 @@ img_t scale(ocl_env_t* env, img_t input, size_t width,
  *  									16*k <= b < 16(k+1)} 
  * =====================================================================================
  */
-float* histogram(ocl_env_t* env, img_t input, size_t width, 
+float* oclHistogram(ocl_env_t* env, img_t input, size_t width, 
 								size_t height);
-
-// CUSTOMIZABLE FILTERING FUNCTIONS 
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  custom_filter
- *  Description:  Applies the filter passed in argument to each pixel.
- *  							The filter should be and array of filter_range² floats.
- * =====================================================================================
- */
-img_t custom_filter(ocl_env_t* env, img_t input, size_t width, size_t height, 
-								float* filter, size_t filter_range);
-
-

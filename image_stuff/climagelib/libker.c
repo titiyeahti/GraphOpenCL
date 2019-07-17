@@ -39,7 +39,7 @@ void blur33(__read_only image2d_t src,
 				{
 								for(j = -(CONST_SIZE-2); j < (CONST_SIZE-1); j++)
 								{
-												temp += read_imagef(src, sampler, (int2)(i, j));
+												temp += read_imagef(src, sampler, (int2)(id0+i, id1+j));
 								}
 				}
 
@@ -98,7 +98,7 @@ void median33(__read_only image2d_t src,
 				{
 								for(j = -(CONST_SIZE-2); j < (CONST_SIZE-1); j++)
 								{
-												array[k] = read_imagef(src, sampler, (int2)(i, j));
+												array[k] = read_imagef(src, sampler, (int2)(id0+i, id1+j));
 												k++;
 								}
 				}
@@ -122,7 +122,7 @@ void median33(__read_only image2d_t src,
 				}
 
 
-				write_imagef(dest, (int2) (id0, id1), array[12]);
+				write_imagef(dest, (int2) (id0, id1), array[CONST_SIZE/2]);
 };
 
 				__kernel 

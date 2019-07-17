@@ -45,118 +45,118 @@ int main(int argc, char** arvg)
 				printf("Init : %f\n", (double) c/CLOCKS_PER_SEC);
 
 				c = clock();
-				img_t output = blur3x3(&env, input, (size_t)x, (size_t)y);
+				img_t output = oclBlur3x3(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("Blur : %f\n", (double) c/CLOCKS_PER_SEC);
 
-//				stbi_write_jpg("img/blur.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/blur.jpg", x, y, n, output, 100);
 
 				free(output);
 			
 
 				c = clock();
-				output = median3x3(&env, input, (size_t)x, (size_t)y);
+				output = oclMedian3x3(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("median : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/med.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/med.jpg", x, y, n, output, 100);
 				
 				free(output);
 				
 				c = clock();
-				output = gaussian3x3(&env, input, (size_t)x, (size_t)y);
+				output = oclGaussian3x3(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("gaussian : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/gauss.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/gauss.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = red(&env, input, (size_t)x, (size_t)y);
+				output = oclRed(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("red : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/red.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/red.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = green(&env, input, (size_t)x, (size_t)y);
+				output = oclGreen(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("green : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/green.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/green.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = blue(&env, input, (size_t)x, (size_t)y);
+				output = oclBlue(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("blue : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/blue.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/blue.jpg", x, y, n, output, 100);
 
 				free(output);
 
 				c = clock();
-				output = grey(&env, input, (size_t)x, (size_t)y);
+				output = oclGrey(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("grey : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/grey.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/grey.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = sobel3x3(&env, input, (size_t)x, (size_t)y);
+				output = oclSobel3x3(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("sobel : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/sobel.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/sobel.jpg", x, y, n, output, 100);
 				
 				img_t input1 = output;
 
 				c = clock();
-				output = add(&env, input, input1, (size_t)x, (size_t)y);
+				output = oclAdd(&env, input, input1, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("add : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/add.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/add.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = sub(&env, input, input1, (size_t)x, (size_t)y);
+				output = oclSub(&env, input, input1, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("sub : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/sub.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/sub.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = and(&env, input, input1, (size_t)x, (size_t)y);
+				output = oclAnd(&env, input, input1, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("and : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/and.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/and.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = or(&env, input, input1, (size_t)x, (size_t)y);
+				output = oclOr(&env, input, input1, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("or : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/or.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/or.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = xor(&env, input, input1, (size_t)x, (size_t)y);
+				output = oclXor(&env, input, input1, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("xor : %f\n", (double) c/CLOCKS_PER_SEC);
-//				stbi_write_jpg("img/xor.jpg", x, y, n, output, 100);
+				stbi_write_jpg("img/xor.jpg", x, y, n, output, 100);
 				
 				free(output);
 
 				c = clock();
-				output = scale(&env, input, (size_t)x, (size_t)y, 0.5, 1.5);
+				output = oclScale(&env, input, (size_t)x, (size_t)y, 0.5, 1.5);
 				c = clock() - c;
 				printf("scale : %f\n", (double) c/CLOCKS_PER_SEC);
 				stbi_write_jpg("img/scale.jpg", (int)(x/2), (int)(y*1.5), n, output, 100);
 
-				float* hist = histogram(&env, input, (size_t)x, (size_t)y);
+				float* hist = oclHistogram(&env, input, (size_t)x, (size_t)y);
 
 				int i;
 				float sum=0;
