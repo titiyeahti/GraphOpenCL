@@ -66,12 +66,10 @@ ocl_env_t oclSetup (void);
 int oclRelease (ocl_env_t* env);
 
 
-
-// 3x3 FAST FILTERING FUNCTIONS
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  oclRelease
- *  Description:  Frees the ocl_env, return EXIT_SUCCES on success.
+ *         Name:  oclBlur3x3, oclMedian3x3, oclGaussian3x3, oclSobel3x3
+ *  Description:  apply a 3x3 filter on each pixel of the image.
  * =====================================================================================
  */
 img_t oclBlur3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
@@ -85,8 +83,19 @@ img_t oclSobel3x3 (ocl_env_t* env, img_t input, size_t width, size_t height);
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  red, green, blue, grey
- *  Description:  extract one component of an image, or for the grey function , return 
+ *         Name:  oclBlurNxN, oclGaussianNxN, oclSobelNxN
+ *  Description:  apply a nxn filter on each pixel of the image.
+ * =====================================================================================
+ */
+img_t oclBlurNxN (ocl_env_t* env, img_t input, size_t width, size_t height, int n);
+
+img_t oclGaussianNxN (ocl_env_t* env, img_t input, size_t width, size_t height, int n);
+
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  oclRed, oclGreen, oclBlue, oclGrey
+ *  Description:  extract one component of an image, or for the grey function, return 
  *  							the greyscale image correcponding to the input;
  * =====================================================================================
  */
@@ -121,6 +130,18 @@ img_t oclOr(ocl_env_t* env, img_t input1, img_t input2,
 img_t oclXor(ocl_env_t* env, img_t input1, img_t input2,
 								size_t width, size_t height);
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  oclMult, oclDiv
+ *  Description:  multiply or divide each pixel of the image by coeff;
+ * =====================================================================================
+ */
+img_t oclMult(ocl_env_t* env, img_t input, 
+								size_t width, size_t height, float coeff);
+
+img_t oclDiv(ocl_env_t* env, img_t input, 
+								size_t width, size_t height, float coeff);
 
 /* 
  * ===  FUNCTION  ======================================================================

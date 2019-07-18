@@ -31,6 +31,7 @@ int main(int argc, char** arvg)
 				int x, y, n;
 				clock_t c;
 
+				img_t output;
 				c = clock();
 				env = oclSetup();
 
@@ -45,7 +46,7 @@ int main(int argc, char** arvg)
 				printf("Init : %f\n", (double) c/CLOCKS_PER_SEC);
 
 				c = clock();
-				img_t output = oclBlur3x3(&env, input, (size_t)x, (size_t)y);
+				output = oclBlur3x3(&env, input, (size_t)x, (size_t)y);
 				c = clock() - c;
 				printf("Blur : %f\n", (double) c/CLOCKS_PER_SEC);
 
@@ -155,14 +156,28 @@ int main(int argc, char** arvg)
 				c = clock() - c;
 				printf("scale : %f\n", (double) c/CLOCKS_PER_SEC);
 				stbi_write_jpg("img/scale.jpg", (int)(x/2), (int)(y*1.5), n, output, 100);
+				
+				c = clock();
+				output = oclMult(&env, input, (size_t)x, (size_t)y, 2.0);
+				c = clock() - c;
+				printf("mult : %f\n", (double) c/CLOCKS_PER_SEC);
+				stbi_write_jpg("img/mult2.jpg", x, y, n, output, 100);
 
+				c = clock();
+				output = oclDiv(&env, input, (size_t)x, (size_t)y, 2.0);
+				c = clock() - c;
+				printf("div : %f\n", (double) c/CLOCKS_PER_SEC);
+				stbi_write_jpg("img/div2.jpg", x, y, n, output, 100);
+
+				c = clock();
 				float* hist = oclHistogram(&env, input, (size_t)x, (size_t)y);
+				c = clock() - c;
+				printf("Histogram : %f\n", (double) c/CLOCKS_PER_SEC);
 
 				int i;
 				float sum=0;
 				for(i=0; i<4096; i++)
 				{
-//								printf("%f\n", hist[i]);
 								sum += hist[i];
 				}
 				printf("somme hist = %f\n", sum);
@@ -171,6 +186,6 @@ int main(int argc, char** arvg)
 
 				free(input);
 
-				free(input1);
+//				free(input1);
 				return oclRelease(&env);
 }
