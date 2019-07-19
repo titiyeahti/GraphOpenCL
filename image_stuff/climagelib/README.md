@@ -1,4 +1,4 @@
-# climglib
+# climiagelib
 
 ## Brief
 
@@ -13,16 +13,28 @@ To use this library, you only need `<Cl/cl.h>` and the OpenCL's drivers for your
 * `ocl_env_t`, the struct containing all OpenCL's variables.
 * `img_t`, an alias for `unsigned int *`.
 
-## Usage
+## Dowload & Make
 
-0. download climagelib.[hc]
+0. Dowload
+	* download climagelib.[hc], libker.c and Makefile;
+1. Compile using gcc :
+	* to compile the object code of the library : `gcc -c climagelib.c -03 -std=c99 -ffast-math`;
+	* to compile your code : `gcc climagelib.o [yourfile] -03 -std=c99 -ffast-math -lm -lOpenCL -fopenmp -o [youroutput]`;
+2. Compile using the Makefile :
+	* suppres the `-I $(UTILS)` options from it;
+	* make your receipe slightly by modifying the `test.out` receipe (replace `testzone.c` by `yourfile.c` and `test.out` by whatever you want;
+	
+## Usage 
+0. **IMPORTANT** Make sure that `libker.c` is in the same kernel as your program when you're running it (since the kernels are compiled at runtime and they are reed from thi file during `ocl_setup`)
 1. `#include "climagelib.h"`
 2. create an `ocl\_enn\_t` 
-2. **IMPORTANT** make sure you work with 32-bit images (RGBA) with 8-bit unsigned integers for each channel.
-3. use the functions.
-4. be aware that each function return a new pointer, so remind to free intermediate results.
+3. **IMPORTANT** make sure you work with 32-bit images (RGBA) with 8-bit unsigned integers for each channel.
+4. use the functions.
+5. be aware that each function return a new pointer, so remind to free intermediate results.
 
 ## List of functions
+
+
 0. Miscellanous
 	* `img_t convert_to_32bits(img_t img, size_t x, size_t y)` convert the 24-Bits image `img` into a 32-Bits image by setting the alpa channel to 255;
 1. OpenCL environnement functions :
@@ -55,3 +67,7 @@ To use this library, you only need `<Cl/cl.h>` and the OpenCL's drivers for your
 8. Histogram, return an histogram of the image:
 	* format $hist[256i+16j+k]$ contain the frequency of the pixels in the following ;set $S(i,j,k)={r,g,b \in [0,255]^3, 16i \leq r < 16(i+1),16j \leq g < 16(j+1),16k \leq b < 16(k+1)};
 	* `float* oclHistogram(ocl_env_t* env, img_t input, size_t width, size_t height)`;
+
+## CONTACT
+
+If any problem encountered, you can ask for help at thibaut.milhaud@gmail.com.
